@@ -121,7 +121,7 @@ def get_dataloader(train_path, test_path, data_path, feature_type='mel', n_coeff
 def main(model_path=None):
     ########################################### Settings ##############################################
     # Set the configuration for training.
-    epochs = 500  # number of epochs
+    epochs = 2  # number of epochs
     lr = 0.01  # initial learning rate
     n_spk = 30  # number of speakers in the dataset
     log_path = 'dvector.log'  # log file
@@ -180,38 +180,12 @@ def main(model_path=None):
         ####################################      Train and Test     ######################################
     prev_loss = 10000
     ct_dec = 0
-
-    for epoch in range(start, epochs + 1):
-
-        # Train the network.
-        train(epoch, model, softmax_criterion, optimizer, train_loader, device)
-
+    for epoch in range(epochs + 1):
         # Test the network.
         opt_loss, opt_acc = test(model, softmax_criterion, test_loader, device)
-
         # Print out the results.
-        #        print("Epoch: {} Test Loss: {:.3f} Test ACC: {:.2f}".format(epoch,opt_loss,opt_acc ))
+        print("Epoch: {} Test Loss: {:.3f} Test ACC: {:.2f}".format(epoch,opt_loss,opt_acc ))
 
-        # Save the optimal model.
-        if opt_loss < prev_loss:
-            prev_loss = opt_loss
-            torch.save({'epoch': epoch,
-                        'model': model.state_dict(),
-                        'optimizer': optimizer.state_dict()},
-                       model_dir+'model_opt_'+str(opt_loss)+'.pth')
-            ct_edec = 0
-        else:
-            ct_dec += 1
-
-            # Decrease the learning rate by 2 when the test loss decreases 3 times in a row.
-            if ct_dec == 10: # 10
-                optim_state = optimizer.state_dict()
-                optim_state['param_groups'][0]['lr'] /= 2
-                optimizer.load_state_dict(optim_state)
-                print('lr is divided by 2.')
-                ct_dec = 0
-
-
-#main(model_path='./model/model_opt.pth')
-main()
+main(model_path='./model_aug/model_opt_1.2993501830113094.pth')
+#main()
 

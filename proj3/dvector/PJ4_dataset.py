@@ -12,7 +12,7 @@ import random
 
 class SpeakerDataset(Dataset):
     def __init__(self, data_list, data_path='', nfft=512, win_len_time=0.02, hop_len_time=0.01, fs = 16000,
-                 feature_type='mel', n_coeff=64, fr_len=150):
+                 feature_type='mel', n_coeff=64, fr_len=150, random_window=False):
         # Read txt file.
         with open(data_list,'r') as f:
             self.fileset = f.read().split('\n')[:-1] 
@@ -27,7 +27,8 @@ class SpeakerDataset(Dataset):
         self.max_fr = fr_len
         self.total_n = len(self.fileset)
         self.currenct_n = 1
-        
+        self.random_window = random_window
+
     def __len__(self):
         return len(self.fileset)
     
@@ -36,12 +37,13 @@ class SpeakerDataset(Dataset):
         path = token[1]
         label = int(token[0])
         sig, fs = librosa.load(self.data_path+path, sr=self.fs)
-        if(self.currenct_n > self.total_n ):
-            win_length_r = int(random.uniform(100, self.nfft))
-            self.win_sample = win_length_r
-            print("Current_n/Total_n {0} / {1}".format(self.currenct_n, self.total_n))
-            self.currenct_n = 1
-            print("window length {0}".format(win_length_r))
+        if self.random_window:
+            if(self.currenct_n > self.total_n ):
+                win_length_r = int(random.uniform(100, self.nfft))
+                self.win_sample = win_length_r
+                print("Current_n/Total_n {0} / {1}".format(self.currenct_n, self.total_n))
+                self.currenct_n = 1
+                print("window length {0}".format(win_length_r))
 
         #print("global window length {0}".format(self.win_sample))
         feature = self.get_feature(sig)
