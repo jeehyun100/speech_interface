@@ -26,5 +26,5 @@
    
 ## The result
 ![acc](https://github.com/jeehyun100/speech_interface/blob/master/proj3/dvector/Img/acc.png)
-![loss](./img/loss.png)
+![loss](https://github.com/jeehyun100/speech_interface/blob/master/proj3/dvector/Img/loss.png)
 
