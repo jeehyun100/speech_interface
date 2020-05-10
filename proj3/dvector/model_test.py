@@ -121,7 +121,7 @@ def get_dataloader(train_path, test_path, data_path, feature_type='mel', n_coeff
 def main(model_path=None):
     ########################################### Settings ##############################################
     # Set the configuration for training.
-    epochs = 2  # number of epochs
+    epochs = 1  # number of epochs
     lr = 0.01  # initial learning rate
     n_spk = 30  # number of speakers in the dataset
     log_path = 'dvector.log'  # log file
@@ -129,7 +129,7 @@ def main(model_path=None):
     n_coeff = 13  # feature dimension
     indim = n_coeff * 3  # input dimension (MFCC, delta, delta-delta)
     context_len = 10  # number of context window # 몇개의 프레임을합쳐서 입력을 줄것인가?
-    outdim = 512  # d-vector output dimension
+    outdim = 256  # d-vector output dimension
 
     model_dir = "./model_aug/"
     os.makedirs(model_dir, exist_ok=True)
@@ -186,6 +186,6 @@ def main(model_path=None):
         # Print out the results.
         print("Epoch: {} Test Loss: {:.3f} Test ACC: {:.2f}".format(epoch,opt_loss,opt_acc ))
 
-main(model_path='./model_aug/model_opt_1.2993501830113094.pth')
+main(model_path='./model_aug/model_opt_acc83.333.pth')
 #main()
 

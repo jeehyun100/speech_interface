@@ -4,13 +4,12 @@ import torch.nn as nn
 import torch.optim as optim #optimizer
 from tqdm import tqdm #for print
 import numpy as np
-from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from PJ4_dataset import * #교수님 코드
 from PJ4_model import *
 import os
-import logging
-from torchsummary import summary
+from tensorboardX import SummaryWriter
+
 
 
 # Define a train function.
@@ -24,8 +23,6 @@ def train(epoch, model, criterion, optimizer, dataloader, device):
     for batch_idx, (data, label) in bar:
         data = data.type(torch.FloatTensor).to(device)
         label = label.to(device)
-        # 1st 667
-        # 2nd 1354
 
         # Pass the input data through the defined network architecture.
         pred = model(data, extract=True)
@@ -71,12 +68,6 @@ def test(model, criterion, dataloader, device):
         acc = torch.sum(torch.eq(torch.argmax(pred, -1), label)).item()
         total_acc += acc
 
-    #         """
-    #         bar.set_description('Epoch:{:3d} [{}/{} {:.2f}%] CE Loss: {:.3f} ACC: {:.2f}'.format(
-    #                                 epoch, batch_idx,len(dataloader), 100.*(batch_idx/len(dataloader)),
-    #                                 total_loss / samples,
-    #                                 (total_acc / samples)*100.))
-    #         """
     return total_loss / samples, (total_acc / samples) * 100.
 
 
@@ -103,7 +94,7 @@ def get_dataloader(train_path, test_path, data_path, feature_type='mel', n_coeff
                                   feature_type=feature_type, n_coeff=n_coeff)
 
     train_loader = DataLoader(train_dataset,
-                              batch_size=8,
+                              batch_size=64,
                               shuffle=True,
                               collate_fn=collate_fn,
                               num_workers=0,
@@ -119,9 +110,12 @@ def get_dataloader(train_path, test_path, data_path, feature_type='mel', n_coeff
 
 
 def main(model_path=None):
+    # 기본 `log_dir` 은 "runs"이며, 여기서는 더 구체적으로 지정하였습니다
+    writer = SummaryWriter('./runs/dvector_experiment_1')
+
     ########################################### Settings ##############################################
     # Set the configuration for training.
-    epochs = 500  # number of epochs
+    epochs = 200  # number of epochs
     lr = 0.01  # initial learning rate
     n_spk = 30  # number of speakers in the dataset
     log_path = 'dvector.log'  # log file
@@ -129,9 +123,9 @@ def main(model_path=None):
     n_coeff = 13  # feature dimension
     indim = n_coeff * 3  # input dimension (MFCC, delta, delta-delta)
     context_len = 10  # number of context window # 몇개의 프레임을합쳐서 입력을 줄것인가?
-    outdim = 512  # d-vector output dimension
+    outdim = 256  # d-vector output dimension
 
-    model_dir = "./model_aug/"
+    model_dir = "./model_aug2/"
     os.makedirs(model_dir, exist_ok=True)
 
     # Check if we can use a GPU device.
@@ -159,7 +153,6 @@ def main(model_path=None):
 
     print(model)
 
-
     # Set the optimizer with Adam.
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
@@ -179,6 +172,7 @@ def main(model_path=None):
 
         ####################################      Train and Test     ######################################
     prev_loss = 10000
+    prev_acc = 0
     ct_dec = 0
 
     for epoch in range(start, epochs + 1):
@@ -190,26 +184,47 @@ def main(model_path=None):
         opt_loss, opt_acc = test(model, softmax_criterion, test_loader, device)
 
         # Print out the results.
-        #        print("Epoch: {} Test Loss: {:.3f} Test ACC: {:.2f}".format(epoch,opt_loss,opt_acc ))
+        print("Epoch: {} Test Loss: {:.3f} Test ACC: {:.2f}".format(epoch,opt_loss,opt_acc ))
+        #if epoch % 5 == 4:    # 매 1000 미니배치마다...
 
+            # ...학습 중 손실(running loss)을 기록하고
+        writer.add_scalar('training loss',
+                        opt_loss,
+                          (epoch+1))
         # Save the optimal model.
         if opt_loss < prev_loss:
             prev_loss = opt_loss
             torch.save({'epoch': epoch,
                         'model': model.state_dict(),
                         'optimizer': optimizer.state_dict()},
-                       model_dir+'model_opt_'+str(opt_loss)+'.pth')
+                       model_dir+'model_opt_loss'+"{:0.3f}".format(opt_loss)+'.pth')
             ct_edec = 0
         else:
             ct_dec += 1
 
             # Decrease the learning rate by 2 when the test loss decreases 3 times in a row.
-            if ct_dec == 10: # 10
+            if ct_dec == 30: # 10
                 optim_state = optimizer.state_dict()
                 optim_state['param_groups'][0]['lr'] /= 2
                 optimizer.load_state_dict(optim_state)
                 print('lr is divided by 2.')
                 ct_dec = 0
+        #print("prev_acc {0}".format(prev_acc))
+        if opt_acc > prev_acc:
+            print("save better acc {0}".format(opt_acc))
+            prev_acc = opt_acc
+            torch.save({'epoch': epoch,
+                        'model': model.state_dict(),
+                        'optimizer': optimizer.state_dict()},
+                       model_dir+'model_opt_acc'+"{:0.3f}".format(opt_acc)+'.pth')
+            #ct_edec = 0
+        if opt_acc > 93.0:
+            print("save better acc {0}".format(opt_acc))
+            prev_acc = opt_acc
+            torch.save({'epoch': epoch,
+                        'model': model.state_dict(),
+                        'optimizer': optimizer.state_dict()},
+                       model_dir+'model_opt_acc'+"{:0.3f}".format(opt_acc)+'.pth')
 
 
 #main(model_path='./model/model_opt.pth')

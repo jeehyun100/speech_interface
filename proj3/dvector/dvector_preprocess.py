@@ -40,15 +40,15 @@ def preprocess_ai_class_data(filepath):
     df_test_prep_data.to_csv('sic_test.txt', sep=' ', columns=['encoded_id', 'path'],
                      index=False, header=False)  # do not write index
 
-def split_5sec(fs = 16000):
+def split_5sec(filepath, fs = 16000):
     aug_dir = "../SpeakerAugDB/"
     aug_dir_train = "../SpeakerAugDB/Train/"
     aug_dir_test = "../SpeakerAugDB/Test/"
     os.makedirs(aug_dir_train, exist_ok=True)
     os.makedirs(aug_dir_test, exist_ok=True)
 
-    train_list = glob.glob('../SpeakerDB/Train/*_train.wav')
-    test_list = glob.glob('../SpeakerDB/Test/*_test.wav')
+    train_list = glob.glob(filepath+'Train/*_train.wav')
+    #test_list = glob.glob('../SpeakerDB/Test/*_test.wav')
     for data_path in train_list:
         sig, fs = librosa.load(data_path, sr=fs)
 
@@ -72,8 +72,8 @@ def split_5sec(fs = 16000):
     #                      i in
     #                      range(len(test_list))]
 
-def audio_aug():
-    aug_dir = "../SpeakerAugDB/"
+def audio_aug(aug_dir):
+    #aug_dir = "../SpeakerAugDB/"
     aug_dir_train = "../SpeakerAug2DB/Train/"
     aug_dir_test = "../SpeakerAug2DB/Test/"
     os.makedirs(aug_dir_train, exist_ok=True)
@@ -119,8 +119,10 @@ def audio_aug():
 
 
 if __name__ == '__main__':
-    filepath = "../SpeakerAug2DB/"
-    preprocess_ai_class_data(filepath)
-    #split_5sec()
-    #audio_aug()
+    filepath = "../modify_data/"
+    #filepath = "../SpeakerAug2DB/"
+    #preprocess_ai_class_data(filepath)
+    #split_5sec(filepath)
+    #filepath = "../SpeakerAugDB/"
+    audio_aug(filepath)
 

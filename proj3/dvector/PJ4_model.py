@@ -11,12 +11,12 @@ class Dvector(nn.Module):
                                      nn.LeakyReLU(negative_slope=0.2),        
                                      nn.Linear(outdim, outdim),
                                      nn.LeakyReLU(negative_slope=0.2), 
-                                     nn.Linear(outdim, outdim),
+                                     nn.Linear(outdim, 128),
                                      nn.LeakyReLU(negative_slope=0.2),
-                                     nn.Linear(outdim, outdim),
+                                     nn.Linear(128, 128),
                                      nn.LeakyReLU(negative_slope=0.2))
 
-        self.clf = nn.Linear(512, self.n_spks)
+        self.clf = nn.Linear(128, self.n_spks)
         
     def forward(self, x, extract=False):
         # Normalize input features.
