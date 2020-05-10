@@ -25,6 +25,6 @@
    - python model_test.py
    
 ## The result
-!acc(./img/acc.png)
-!loss(./img/loss.png)
+![acc](https://github.com/jeehyun100/speech_interface/blob/master/proj3/dvector/Img/acc.png)
+![loss](./img/loss.png)
 
